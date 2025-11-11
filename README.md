@@ -41,3 +41,44 @@ flowchart LR
     end
 
 ```
+
+```mermaid
+
+sequenceDiagram
+participant client
+box Server
+participant server
+participant parser
+participant dispatcher
+participant scraper
+participant db
+end
+participant letterboxd
+participant tmdb
+
+
+client->>server: Send payload
+server->>+parser: Parse message
+dispatcher-->>parser: Valid action types
+Note right of parser: Parse and convert to Action
+parser->>-server: Parsed Message (as action)
+server-)db: Create entry in action table
+server->>dispatcher: Send action to be dispatched
+server->>client: Send response
+dispatcher-)scraper:Request scraping
+activate scraper
+loop while has pages
+scraper-)+letterboxd: Load user page
+letterboxd-)-scraper: Review data
+opt Movie is not present on DB
+scraper-)tmdb: Request movie metadata
+tmdb-)scraper: Movie metadata
+scraper-)db: Store movie metadata
+end
+end
+scraper-)db: Store compiled reviews
+deactivate scraper
+scraper->>dispatcher: Notify completion (?)
+dispatcher->>client: Notify via websocket(?)
+
+```
